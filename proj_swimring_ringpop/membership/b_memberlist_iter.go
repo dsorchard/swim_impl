@@ -43,3 +43,5 @@ func (i *memberlistIter) Next() (*Member, bool) {
 
 	return nil, false
 }
+
+//ok

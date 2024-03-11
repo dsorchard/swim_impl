@@ -83,47 +83,16 @@ func (n *Node) Incarnation() int64 {
 	return -1
 }
 
-func (n *Node) pinging() bool {
-	n.status.RLock()
-	pinging := n.status.pinging
-	n.status.RUnlock()
-
-	return pinging
-}
-
 func (n *Node) setPinging(pinging bool) {
 	n.status.Lock()
 	n.status.pinging = pinging
 	n.status.Unlock()
 }
 
-func (n *Node) pingNextMember() {
-	if n.pinging() {
-		return
-	}
+func (n *Node) pinging() bool {
+	n.status.RLock()
+	pinging := n.status.pinging
+	n.status.RUnlock()
 
-	member, ok := n.memberiter.Next()
-	if !ok {
-		return
-	}
-
-	n.setPinging(true)
-	defer n.setPinging(false)
-
-	res, err := sendDirectPing(n, member.Address, n.pingTimeout)
-	if err == nil {
-		n.memberlist.Update(res.Changes)
-		return
-	}
-
-	n.memberlist.CloseMemberClient(member.Address)
-	targetReached, _ := sendIndirectPing(n, member.Address, n.pingRequestSize, n.pingRequestTimeout)
-
-	if !targetReached {
-		if member.Status != Suspect {
-			logger.Errorf("Cannot reach %s, mark it suspect", member.Address)
-		}
-		n.memberlist.MarkSuspect(member.Address, member.Incarnation)
-		return
-	}
+	return pinging
 }
