@@ -1,7 +1,6 @@
 package membership
 
 import (
-	"math/rand"
 	"sync"
 )
 
@@ -14,17 +13,6 @@ type Member struct {
 
 func (m *Member) isReachable() bool {
 	return m.Status == Alive || m.Status == Suspect
-}
-
-func shuffle(members []*Member) []*Member {
-	newMembers := make([]*Member, len(members), cap(members))
-	newIndexes := rand.Perm(len(members))
-
-	for o, n := range newIndexes {
-		newMembers[n] = members[o]
-	}
-
-	return newMembers
 }
 
 // ----------------change---------------------
@@ -58,5 +46,3 @@ type Change struct {
 type changeHandler interface {
 	HandleChanges(changes []Change)
 }
-
-//ok

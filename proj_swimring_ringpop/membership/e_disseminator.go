@@ -4,9 +4,26 @@ import "sync"
 
 const defaultPFactor int = 15
 
+// pChange is a Change with a piggyback counter.
 type pChange struct {
 	Change
 	p int
+}
+
+type Disseminator interface {
+	RecordChange(change Change)
+	ClearChange(address string)
+
+	// IssueAsSender Prepares a list of changes to be sent out during a gossip round.
+	// It also returns a callback function to increment the piggyback counters of the
+	// disseminated changes, indicating they have been sent once.
+	IssueAsSender() (changes []Change, bumpPiggybackCounters func())
+
+	// IssueAsReceiver Similar to IssueAsSender, but it automatically increments the piggyback counters
+	// because it's assumed that the changes are being sent in response to a received message, and
+	// there's no clear acknowledgment mechanism to trigger the increment.
+	IssueAsReceiver(senderAddress string, senderIncarnation int64, senderChecksum uint32) (changes []Change)
+	MembershipAsChanges() (changes []Change)
 }
 
 type disseminator struct {
@@ -98,32 +115,32 @@ func (d *disseminator) IssueAsReceiver(senderAddress string, senderIncarnation i
 }
 
 func (d *disseminator) filterChangesFromSender(cs []Change, source string, incarnation int64) []Change {
-	for i := 0; i < len(cs); i++ {
-		if incarnation == cs[i].SourceIncarnation && source == cs[i].Source {
-			cs[i], cs[len(cs)-1] = cs[len(cs)-1], cs[i]
-			cs = cs[:len(cs)-1]
-			i--
+	var filtered []Change
+	for _, change := range cs {
+		if change.SourceIncarnation != incarnation || change.Source != source {
+			filtered = append(filtered, change)
 		}
 	}
-	return cs
+	return filtered
 }
 
 // MembershipAsChanges returns a Change array containing all the members
 // in memberlist of Node.
-func (d *disseminator) MembershipAsChanges() (changes []Change) {
+func (d *disseminator) MembershipAsChanges() []Change {
 	d.Lock()
+	defer d.Unlock() // Ensures the lock is released in case of a panic
 
-	for _, member := range d.node.memberlist.Members() {
-		changes = append(changes, Change{
+	members := d.node.memberlist.Members()
+	changes := make([]Change, len(members))
+	for i, member := range members {
+		changes[i] = Change{
 			Address:           member.Address,
 			Incarnation:       member.Incarnation,
 			Source:            d.node.Address(),
 			SourceIncarnation: d.node.Incarnation(),
 			Status:            member.Status,
-		})
+		}
 	}
-
-	d.Unlock()
 
 	return changes
 }
