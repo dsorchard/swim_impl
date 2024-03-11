@@ -21,7 +21,7 @@ type Node struct {
 		sync.RWMutex
 	}
 
-	swimring         changeHandler
+	changeHandler    changeHandler
 	memberlist       *memberlist
 	disseminator     *disseminator
 	stateTransitions *stateTransitions
@@ -51,7 +51,7 @@ func NewNode(swimRing changeHandler, address string, opts *Options) *Node {
 		address: address,
 	}
 
-	node.swimring = swimRing
+	node.changeHandler = swimRing
 	node.memberlist = newMemberlist(node)
 	node.memberiter = newMemberlistIter(node.memberlist)
 	node.disseminator = newDisseminator(node)

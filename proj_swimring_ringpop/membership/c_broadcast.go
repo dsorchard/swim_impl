@@ -89,8 +89,8 @@ func (d *disseminator) IssueAsReceiver(senderAddress string, senderIncarnation i
 	changes = d.filterChangesFromSender(d.issueChanges(), senderAddress, senderIncarnation)
 
 	d.bumpPiggybackCounters(changes)
-
-	if len(changes) > 0 || d.node.memberlist.Checksum() == senderChecksum {
+	// d.node.memberlist.Checksum() == senderChecksum
+	if len(changes) > 0 {
 		return changes
 	}
 

@@ -189,7 +189,7 @@ func (m *memberlist) Update(changes []Change) (applied []Change) {
 
 	if len(applied) > 0 {
 		m.node.handleChanges(applied)
-		m.node.swimring.HandleChanges(applied)
+		m.node.changeHandler.HandleChanges(applied)
 	}
 
 	m.Unlock()
