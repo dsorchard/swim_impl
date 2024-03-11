@@ -1,9 +1,15 @@
 package membership
 
 import (
+	"errors"
 	"net/rpc"
 	"sync"
 	"time"
+)
+
+var (
+	// ErrNodeNotReady is returned when a remote request is being handled while the node is not yet ready
+	ErrNodeNotReady = errors.New("node is not ready to handle requests")
 )
 
 // Node is a SWIM member.
@@ -100,4 +106,13 @@ func (n *Node) MemberReachable(address string) bool {
 
 func (n *Node) Address() string {
 	return n.address
+}
+
+// Ready returns whether or not the node has bootstrapped and is ready for use.
+func (n *Node) Ready() bool {
+	n.status.RLock()
+	ready := n.status.ready
+	n.status.RUnlock()
+
+	return ready
 }

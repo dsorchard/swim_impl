@@ -1,6 +1,9 @@
 package membership
 
-import "sync"
+import (
+	"math/rand"
+	"sync"
+)
 
 type Member struct {
 	sync.RWMutex
@@ -11,6 +14,17 @@ type Member struct {
 
 func (m *Member) isReachable() bool {
 	return m.Status == Alive || m.Status == Suspect
+}
+
+func shuffle(members []*Member) []*Member {
+	newMembers := make([]*Member, len(members), cap(members))
+	newIndexes := rand.Perm(len(members))
+
+	for o, n := range newIndexes {
+		newMembers[n] = members[o]
+	}
+
+	return newMembers
 }
 
 // ----------------change---------------------

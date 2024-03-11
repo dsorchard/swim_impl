@@ -18,6 +18,14 @@ type stateTransitions struct {
 	enabled bool
 }
 
+func newStateTransitions(n *Node) *stateTransitions {
+	return &stateTransitions{
+		node:    n,
+		timers:  make(map[string]*transitionTimer),
+		enabled: true,
+	}
+}
+
 // Cancel cancels the scheduled transition for the change.
 func (s *stateTransitions) Cancel(change Change) {
 	s.Lock()

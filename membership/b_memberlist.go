@@ -2,6 +2,7 @@ package membership
 
 import (
 	"github.com/charmbracelet/log"
+	"math/rand"
 	"net/rpc"
 	"os"
 	"sync"
@@ -15,6 +16,7 @@ type memberlist struct {
 	local *Member
 
 	members struct {
+		list       []*Member
 		byAddress  map[string]*Member
 		rpcClients map[string]*rpc.Client
 		sync.RWMutex
@@ -228,6 +230,13 @@ func (m *memberlist) applyChange(change Change) bool {
 		}
 
 		m.members.byAddress[change.Address] = member
+		i := m.getJoinPosition()
+		newList := make([]*Member, 0, len(m.members.list)+1)
+		newList = append(newList, m.members.list[:i]...)
+		newList = append(newList, member)
+		newList = append(newList, m.members.list[i:]...)
+		m.members.list = newList
+
 		logger.Infof("Server %s added to memberlist", member.Address)
 	}
 
@@ -239,6 +248,21 @@ func (m *memberlist) applyChange(change Change) bool {
 	logger.Infof("%s is marked as %s node", member.Address, change.Status)
 
 	return true
+}
+
+func (m *memberlist) getJoinPosition() int {
+	l := len(m.members.list)
+	if l == 0 {
+		return l
+	}
+	return rand.Intn(l)
+}
+
+// Shuffle shuffles the memberlist.
+func (m *memberlist) Shuffle() {
+	m.members.Lock()
+	m.members.list = shuffle(m.members.list)
+	m.members.Unlock()
 }
 
 func (n *Node) handleChanges(changes []Change) {
@@ -288,4 +312,54 @@ func (s *stateTransitions) schedule(change Change, state string, timeout time.Du
 		Timer: timer,
 		state: state,
 	}
+}
+
+// NumMembers returns the number of members in the memberlist.
+func (m *memberlist) NumMembers() int {
+	m.members.RLock()
+	n := len(m.members.list)
+	m.members.RUnlock()
+
+	return n
+}
+
+// MemberAt returns the i-th member in the list.
+func (m *memberlist) MemberAt(i int) *Member {
+	m.members.RLock()
+	member := m.members.list[i]
+	m.members.RUnlock()
+
+	return member
+}
+
+// Pingable returns whether or not a member is pingable.
+func (m *memberlist) Pingable(member Member) bool {
+	return member.Address != m.local.Address && member.isReachable()
+}
+
+// CloseMemberClient removes the client instance of the member at a specific address.
+func (m *memberlist) CloseMemberClient(address string) {
+	m.members.Lock()
+	delete(m.members.rpcClients, address)
+	m.members.Unlock()
+}
+
+// RandomPingableMembers returns the number of pingable members in the memberlist.
+func (m *memberlist) RandomPingableMembers(n int, excluding map[string]bool) []*Member {
+	var members []*Member
+
+	m.members.RLock()
+	for _, member := range m.members.list {
+		if m.Pingable(*member) && !excluding[member.Address] {
+			members = append(members, member)
+		}
+	}
+	m.members.RUnlock()
+
+	members = shuffle(members)
+
+	if n > len(members) {
+		return members
+	}
+	return members[:n]
 }
