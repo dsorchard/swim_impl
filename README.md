@@ -1,10 +1,16 @@
 # SWIM Implementations
 
-Here, trying to read/understand the SWIM implementations in existing libraries.
+Here I'm trying to read/understand the SWIM implementations in existing libraries and relate it to the paper details.
 
-- SWIM Ring/ RingPop
-- Hashicorp Memberlist
+- [SWIM Ring/ RingPop](proj_swimring_ringpop)
+- [Hashicorp Memberlist](proj_memberlist)
 
 ## Good Resource
 - [Visualizer](https://flopezluis.github.io/gossip-simulator/?ref=highscalability.com)
 - [SWIM Paper](https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf)
+
+## Core Ideas
+- Dissemination Protocol 
+- Failure Detection Protocol: Direct Send vs Indirect Send (Ping, PingRequest, PingResponse) 
+- Incarnation Number & Suspect Protocol 
+- Round Robin Selection of Next Member to Ping

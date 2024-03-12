@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
-	membership2 "swim/proj_swimring_ringpop/membership"
+	"swim/proj_swimring_ringpop/membership"
 	"time"
 )
 
 type SwimRing struct {
-	node         *membership2.Node
+	node         *membership.Node
 	internalPort int
 }
 
@@ -23,7 +23,7 @@ func NewSwimRing(internalPort int) *SwimRing {
 func (sr *SwimRing) init() error {
 	address := fmt.Sprintf("%s:%d", "127.0.0.1", sr.internalPort)
 
-	sr.node = membership2.NewNode(sr, address, &membership2.Options{
+	sr.node = membership.NewNode(sr, address, &membership.Options{
 		JoinTimeout:        time.Duration(200) * time.Millisecond,
 		SuspectTimeout:     time.Duration(200) * time.Millisecond,
 		PingTimeout:        time.Duration(200) * time.Millisecond,
@@ -78,14 +78,14 @@ func (sr *SwimRing) registerInternalRPCHandlers() error {
 	return nil
 }
 
-func (sr *SwimRing) HandleChanges(changes []membership2.Change) {
+func (sr *SwimRing) HandleChanges(changes []membership.Change) {
 	var serversToAdd, serversToRemove []string
 
 	for _, change := range changes {
 		switch change.Status {
-		case membership2.Alive, membership2.Suspect:
+		case membership.Alive, membership.Suspect:
 			serversToAdd = append(serversToAdd, change.Address)
-		case membership2.Faulty:
+		case membership.Faulty:
 			serversToRemove = append(serversToRemove, change.Address)
 		}
 	}

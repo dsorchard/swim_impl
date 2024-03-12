@@ -72,17 +72,6 @@ func sendJoin(node *Node, target string, timeout time.Duration) (*JoinResponse, 
 	return resp, err
 }
 
-// Incarnation returns the incarnation number of the Node.
-func (n *Node) Incarnation() int64 {
-	if n.memberlist != nil && n.memberlist.local != nil {
-		n.memberlist.local.RLock()
-		incarnation := n.memberlist.local.Incarnation
-		n.memberlist.local.RUnlock()
-		return incarnation
-	}
-	return -1
-}
-
 func (n *Node) setPinging(pinging bool) {
 	n.status.Lock()
 	n.status.pinging = pinging

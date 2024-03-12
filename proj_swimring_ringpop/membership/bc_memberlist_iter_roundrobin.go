@@ -61,27 +61,21 @@ func newMemberlistIter(m *memberlist) *memberlistIter {
 // Next returns the next pingable member in the member list, if it
 // visits all members but none are pingable returns nil, false.
 func (i *memberlistIter) Next() (*Member, bool) {
-	numOfMembers := i.m.NumMembers()
-	visited := make(map[string]bool)
-
-	for len(visited) < numOfMembers {
-		i.currentIndex++
-
-		if i.currentIndex >= i.m.NumMembers() {
-			i.currentIndex = 0
-			i.currentRound++
-			i.m.Shuffle()
-		}
-
+	startIndex := i.currentIndex
+	for {
 		member := i.m.MemberAt(i.currentIndex)
-		visited[member.Address] = true
-
 		if i.m.Pingable(*member) {
 			return member, true
 		}
+
+		// round-robin through the member list
+		i.currentIndex = (i.currentIndex + 1) % i.m.NumMembers()
+		if i.currentIndex == startIndex {
+			return nil, false
+		}
+
+		if i.currentIndex == 0 {
+			i.m.Shuffle()
+		}
 	}
-
-	return nil, false
 }
-
-//ok

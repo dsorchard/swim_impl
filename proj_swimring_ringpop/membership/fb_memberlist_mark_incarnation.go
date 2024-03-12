@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+// Incarnation returns the incarnation number of the Node.
+func (n *Node) Incarnation() int64 {
+	if n.memberlist != nil && n.memberlist.local != nil {
+		n.memberlist.local.RLock()
+		incarnation := n.memberlist.local.Incarnation
+		n.memberlist.local.RUnlock()
+		return incarnation
+	}
+	return -1
+}
+
 // Reincarnate sets the status of the node to Alive and updates the incarnation
 // number. It adds the change to the disseminator as well.
 func (m *memberlist) Reincarnate() []Change {
