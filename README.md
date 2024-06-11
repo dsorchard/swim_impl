@@ -14,3 +14,7 @@ Here I'm trying to read/understand the SWIM implementations in existing librarie
 - Failure Detection Protocol: Direct Send vs Indirect Send (Ping, PingRequest, PingResponse) 
 - Incarnation Number & Suspect Protocol 
 - Round Robin Selection of Next Member to Ping
+
+## Good Videos (Watch later)
+- https://www.youtube.com/watch?v=Gxf5glthqrk&t=1418s
+- https://www.youtube.com/watch?v=QGMgktRBeeU
